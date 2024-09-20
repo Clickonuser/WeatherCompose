@@ -52,6 +52,7 @@ android {
 dependencies {
 
     implementation(libs.coil.compose)
+    implementation(libs.compose.consrain.layout)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

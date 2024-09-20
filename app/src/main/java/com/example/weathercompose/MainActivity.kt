@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,9 +33,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import com.example.weathercompose.ui.theme.IndicatorWeather
 import com.example.weathercompose.ui.theme.ThemeWeather
@@ -196,7 +203,7 @@ fun TabLayout() {
             state = pagerState,
             modifier = Modifier.weight(1.0f)
         ) { index ->
-            when(index) {
+            when (index) {
                 0 -> MainList()
                 1 -> Details()
             }
@@ -268,5 +275,152 @@ fun ListItem() {
 
 @Composable
 fun Details() {
+    ConstraintLayout(
+        modifier = Modifier
+            .padding(top = 4.dp)
+            .fillMaxSize()
+            .background(ThemeWeather)
+    ) {
+        val (iconSunrise, textSunrise, iconSunset, textSunset, line, textLastUpdated, dataColumn) = createRefs()
+        val centerVerticalGuideLine = createGuidelineFromStart(0.5f)
 
+        Icon(
+            modifier = Modifier.constrainAs(iconSunrise) {
+                top.linkTo(parent.top, 24.dp)
+                start.linkTo(parent.start, 8.dp)
+                end.linkTo(centerVerticalGuideLine)
+            },
+            painter = painterResource(id = R.drawable.ic_sunrise),
+            contentDescription = "ic sunrise",
+            tint = Color.White
+        )
+        Icon(
+            modifier = Modifier.constrainAs(line) {
+                top.linkTo(iconSunrise.top)
+                bottom.linkTo(textSunrise.bottom)
+                start.linkTo(centerVerticalGuideLine)
+                end.linkTo(centerVerticalGuideLine)
+            },
+            painter = painterResource(id = R.drawable.ic_line),
+            contentDescription = "ic line",
+            tint = Color.White
+        )
+        Icon(
+            modifier = Modifier.constrainAs(iconSunset) {
+                top.linkTo(iconSunrise.top)
+                bottom.linkTo(iconSunrise.bottom)
+                start.linkTo(centerVerticalGuideLine)
+                end.linkTo(parent.end, 8.dp)
+            },
+            painter = painterResource(id = R.drawable.ic_sunset),
+            contentDescription = "ic sunset",
+            tint = Color.White
+        )
+        Text(
+            modifier = Modifier.constrainAs(textSunrise) {
+                top.linkTo(iconSunrise.bottom, 4.dp)
+                start.linkTo(iconSunrise.start)
+                end.linkTo(iconSunrise.end)
+            },
+            text = buildAnnotatedString {
+                append("Sunrise:\n")
+                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append("0:00 AM")
+                }
+            },
+            color = Color.White,
+            style = TextStyle(fontSize = 16.sp, textAlign = TextAlign.Center)
+        )
+        Text(
+            modifier = Modifier.constrainAs(textSunset) {
+                top.linkTo(iconSunset.bottom, 4.dp)
+                start.linkTo(iconSunset.start)
+                end.linkTo(iconSunset.end)
+            },
+            text = buildAnnotatedString {
+                append("Sunset:\n")
+                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append("0:00 PM")
+                }
+            },
+            color = Color.White,
+            style = TextStyle(fontSize = 16.sp, textAlign = TextAlign.Center)
+        )
+
+        Column(
+            modifier = Modifier.constrainAs(dataColumn) {
+                top.linkTo(textSunrise.bottom, 32.dp)
+                start.linkTo(centerVerticalGuideLine)
+                end.linkTo(centerVerticalGuideLine)
+            },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                modifier = Modifier.padding(bottom = 4.dp),
+                text = buildAnnotatedString {
+                    append("Wind speed: ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("0 km/h")
+                    }
+                },
+                color = Color.White,
+                style = TextStyle(fontSize = 16.sp)
+            )
+            Text(
+                modifier = Modifier.padding(bottom = 4.dp),
+                text = buildAnnotatedString {
+                    append("Chance of rain: ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("0 %")
+                    }
+                },
+                color = Color.White,
+                style = TextStyle(fontSize = 16.sp)
+            )
+            Text(
+                modifier = Modifier.padding(bottom = 4.dp),
+                text = buildAnnotatedString {
+                    append("Chance of snow: ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("0 %")
+                    }
+                },
+                color = Color.White,
+                style = TextStyle(fontSize = 16.sp)
+            )
+            Text(
+                modifier = Modifier.padding(bottom = 4.dp),
+                text = buildAnnotatedString {
+                    append("Humidity: ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("0 %")
+                    }
+                },
+                color = Color.White,
+                style = TextStyle(fontSize = 16.sp)
+            )
+            Text(
+                modifier = Modifier.padding(bottom = 4.dp),
+                text = buildAnnotatedString {
+                    append("cloud: ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("0 %")
+                    }
+                },
+                color = Color.White,
+                style = TextStyle(fontSize = 16.sp)
+            )
+        }
+        Text(
+            modifier = Modifier.constrainAs(textLastUpdated) {
+                top.linkTo(dataColumn.bottom)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(centerVerticalGuideLine)
+                end.linkTo(centerVerticalGuideLine)
+            },
+            text = "last updated 0 minutes ago",
+            color = Color.White.copy(0.64f),
+            style = TextStyle(fontSize = 12.sp)
+        )
+    }
 }
