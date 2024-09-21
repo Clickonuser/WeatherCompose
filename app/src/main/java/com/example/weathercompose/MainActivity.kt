@@ -30,8 +30,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -43,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
-import com.example.weathercompose.ui.theme.IndicatorWeather
 import com.example.weathercompose.ui.theme.ThemeWeather
 import com.example.weathercompose.ui.theme.WeatherComposeTheme
 import kotlinx.coroutines.launch
@@ -53,6 +54,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             WeatherComposeTheme {
+                Image(
+                    painter = painterResource(
+                        id = R.drawable.back
+                    ),
+                    contentDescription = "im1",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .alpha(0.5f),
+                    contentScale = ContentScale.Crop
+                )
                 Column {
                     MainCard()
                     TabLayout()
@@ -181,7 +192,7 @@ fun TabLayout() {
             indicator = { pos ->
                 TabRowDefaults.SecondaryIndicator(
                     modifier = Modifier.tabIndicatorOffset(pos[tabIndex]),
-                    color = IndicatorWeather
+                    color = Color.White
                 )
             }
         ) {
