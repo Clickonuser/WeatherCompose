@@ -11,6 +11,7 @@ composeBom = "2024.04.01"
 coilVersion = "2.0.0-rc01"
 constrainLayoutVersion = "1.0.1"
 volleyVersion = "1.2.1"
+hilt = "2.46"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,10 +29,12 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilVersion" }
-compose-consrain-layout = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version.ref = "constrainLayoutVersion" }
+compose-consraint-layout = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version.ref = "constrainLayoutVersion" }
 volley-android = { group = "com.android.volley", name = "volley", version.ref = "volleyVersion" }
+google-dagger-hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+google-dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-
+google-dagger-hilt-plugin = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }

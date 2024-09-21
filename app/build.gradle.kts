@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    kotlin("kapt")
+    alias(libs.plugins.google.dagger.hilt.plugin)
 }
 
 android {
@@ -51,9 +53,18 @@ android {
 
 dependencies {
 
+    // Coil
     implementation(libs.coil.compose)
-    implementation(libs.compose.consrain.layout)
+
+    // ConstraintLayout
+    implementation(libs.compose.consraint.layout)
+
+    // Volley
     implementation(libs.volley.android)
+
+    // Dagger-hilt
+    implementation(libs.google.dagger.hilt)
+    kapt(libs.google.dagger.hilt.compiler)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
