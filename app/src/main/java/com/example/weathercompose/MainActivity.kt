@@ -1,6 +1,8 @@
 package com.example.weathercompose
 
+import android.content.Context
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -27,6 +29,9 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,15 +50,55 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
+import com.android.volley.Request
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import com.example.weathercompose.data.WeatherDetails
+import com.example.weathercompose.data.WeatherMainCard
+import com.example.weathercompose.data.Forecast
+import com.example.weathercompose.data.WeatherResponse
 import com.example.weathercompose.ui.theme.ThemeWeather
 import com.example.weathercompose.ui.theme.WeatherComposeTheme
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+
+const val API_KEY = "df1c637cf2e6440f982132240241907"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             WeatherComposeTheme {
+                val city = remember {
+                    mutableStateOf("Tokyo")
+                }
+                val forecast = remember {
+                    mutableStateOf(listOf<Forecast>())
+                }
+                val weatherMainCard = remember {
+                    mutableStateOf(WeatherMainCard(
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                    ))
+                }
+                val weatherDetails = remember {
+                    mutableStateOf(WeatherDetails(
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                    ))
+                }
+                getData(city.value, this, forecast, weatherMainCard, weatherDetails)
                 Image(
                     painter = painterResource(
                         id = R.drawable.back
@@ -71,6 +116,97 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+private fun getData(
+    city: String,
+    context: Context,
+    forecast: MutableState<List<Forecast>>,
+    weatherMainCard: MutableState<WeatherMainCard>,
+    weatherDetails: MutableState<WeatherDetails>
+) {
+    val url = "https://api.weatherapi.com/v1/forecast.json?key=$API_KEY" +
+            "&q=$city" +
+            "&days=" +
+            "3" +
+            "&aqi=no&alerts=no"
+    val queue = Volley.newRequestQueue(context)
+    val sRequest = StringRequest(
+        Request.Method.GET,
+        url,
+        { response ->
+            val result = parseData(response)
+            forecast.value = result.forecast
+            weatherMainCard.value = result.weatherMainCard
+            weatherDetails.value = result.weatherDetails
+            Toast.makeText(context, response, Toast.LENGTH_SHORT).show()
+        },
+        { error ->
+
+        }
+    )
+    queue.add(sRequest)
+}
+
+private fun parseData(response: String): WeatherResponse {
+    val mainObject = JSONObject(response)
+    val currentObject = mainObject.getJSONObject("current")
+    val forecastArray = mainObject.getJSONObject("forecast").getJSONArray("forecastday")
+    val item = forecastArray[0] as JSONObject
+
+    val mainCard = parseMainCard(mainObject, currentObject, item)
+    val weatherDetails = parseWeatherDetails(currentObject, item)
+    val forecast = parseForecast(forecastArray)
+
+    return WeatherResponse(
+        mainCard,
+        forecast,
+        weatherDetails
+    )
+}
+
+private fun parseWeatherDetails(currentObject: JSONObject, item: JSONObject): WeatherDetails {
+    return WeatherDetails(
+        item.getJSONObject("astro").getString("sunrise"),
+        item.getJSONObject("astro").getString("sunset"),
+        currentObject.getString("wind_kph"),
+        item.getJSONObject("day").getString("daily_chance_of_rain"),
+        item.getJSONObject("day").getString("daily_chance_of_snow"),
+        currentObject.getString("humidity"),
+        currentObject.getString("cloud"),
+    )
+}
+
+private fun parseMainCard(mainObject: JSONObject, currentObject: JSONObject, item: JSONObject): WeatherMainCard {
+    return WeatherMainCard(
+        mainObject.getJSONObject("location").getString("name"),
+        item.getString("date"),
+        currentObject.getString("temp_c"),
+        item.getJSONObject("day").getString("maxtemp_c"),
+        item.getJSONObject("day").getString("mintemp_c"),
+        currentObject.getJSONObject("condition").getString("text"),
+        currentObject.getJSONObject("condition").getString("icon")
+    )
+}
+
+private fun parseForecast(forecastArray: JSONArray): List<Forecast> {
+    val listForecast = ArrayList<Forecast>()
+    for (i in 0 until forecastArray.length()) {
+        val el = forecastArray[i] as JSONObject
+        val forecastByHoursList = el.getJSONArray("hour")
+        for (j in 0 until forecastByHoursList.length()) {
+            val itemHour = forecastByHoursList[j] as JSONObject
+            listForecast.add(
+                Forecast(
+                    itemHour.getString("time"),
+                    itemHour.getString("temp_c"),
+                    itemHour.getJSONObject("condition").getString("text"),
+                    itemHour.getJSONObject("condition").getString("icon")
+                )
+            )
+        }
+    }
+    return listForecast
 }
 
 @Composable
