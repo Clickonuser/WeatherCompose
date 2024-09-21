@@ -2,7 +2,6 @@ package com.example.weathercompose
 
 import android.content.Context
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,6 +62,7 @@ import com.example.weathercompose.ui.theme.WeatherComposeTheme
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlin.math.roundToInt
 
 const val API_KEY = "df1c637cf2e6440f982132240241907"
 
@@ -77,32 +78,34 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(listOf<Forecast>())
                 }
                 val weatherMainCard = remember {
-                    mutableStateOf(WeatherMainCard(
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                    ))
+                    mutableStateOf(
+                        WeatherMainCard(
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                        )
+                    )
                 }
                 val weatherDetails = remember {
-                    mutableStateOf(WeatherDetails(
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                    ))
+                    mutableStateOf(
+                        WeatherDetails(
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                        )
+                    )
                 }
                 getData(city.value, this, forecast, weatherMainCard, weatherDetails)
                 Image(
-                    painter = painterResource(
-                        id = R.drawable.back
-                    ),
+                    painter = painterResource(id = R.drawable.back),
                     contentDescription = "im1",
                     modifier = Modifier
                         .fillMaxSize()
@@ -110,8 +113,8 @@ class MainActivity : ComponentActivity() {
                     contentScale = ContentScale.Crop
                 )
                 Column {
-                    MainCard()
-                    TabLayout()
+                    MainCard(weatherMainCard)
+                    TabLayout(forecast, weatherDetails)
                 }
             }
         }
@@ -139,9 +142,8 @@ private fun getData(
             forecast.value = result.forecast
             weatherMainCard.value = result.weatherMainCard
             weatherDetails.value = result.weatherDetails
-            Toast.makeText(context, response, Toast.LENGTH_SHORT).show()
         },
-        { error ->
+        { _ ->
 
         }
     )
@@ -177,15 +179,19 @@ private fun parseWeatherDetails(currentObject: JSONObject, item: JSONObject): We
     )
 }
 
-private fun parseMainCard(mainObject: JSONObject, currentObject: JSONObject, item: JSONObject): WeatherMainCard {
+private fun parseMainCard(
+    mainObject: JSONObject,
+    currentObject: JSONObject,
+    item: JSONObject
+): WeatherMainCard {
     return WeatherMainCard(
         mainObject.getJSONObject("location").getString("name"),
         item.getString("date"),
+        currentObject.getJSONObject("condition").getString("icon"),
         currentObject.getString("temp_c"),
+        currentObject.getJSONObject("condition").getString("text"),
         item.getJSONObject("day").getString("maxtemp_c"),
         item.getJSONObject("day").getString("mintemp_c"),
-        currentObject.getJSONObject("condition").getString("text"),
-        currentObject.getJSONObject("condition").getString("icon")
     )
 }
 
@@ -199,8 +205,8 @@ private fun parseForecast(forecastArray: JSONArray): List<Forecast> {
             listForecast.add(
                 Forecast(
                     itemHour.getString("time"),
-                    itemHour.getString("temp_c"),
                     itemHour.getJSONObject("condition").getString("text"),
+                    itemHour.getString("temp_c"),
                     itemHour.getJSONObject("condition").getString("icon")
                 )
             )
@@ -210,7 +216,16 @@ private fun parseForecast(forecastArray: JSONArray): List<Forecast> {
 }
 
 @Composable
-private fun MainCard() {
+private fun MainCard(weatherMainCard: MutableState<WeatherMainCard>) {
+
+    val city = weatherMainCard.value.city.ifEmpty { "-" }
+    val date = weatherMainCard.value.date.ifEmpty { "-" }
+    val icon = "https:" + weatherMainCard.value.icon
+    val currentTemp = "${weatherMainCard.value.currentTemp.toFloatOrNull()?.roundToInt() ?: 0}°C"
+    val condition = weatherMainCard.value.condition.ifEmpty { "-" }
+    val maxMin = "${weatherMainCard.value.maxTemp.toFloatOrNull()?.roundToInt() ?: 0}°/" +
+            "${weatherMainCard.value.minTemp.toFloatOrNull()?.roundToInt() ?: 0}°"
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -235,12 +250,12 @@ private fun MainCard() {
             ) {
                 Text(
                     modifier = Modifier.padding(start = 8.dp, top = 8.dp),
-                    text = "city",
+                    text = city,
                     style = TextStyle(fontSize = 16.sp, color = Color.White)
                 )
                 Text(
                     modifier = Modifier.padding(end = 8.dp, top = 8.dp),
-                    text = "date",
+                    text = date,
                     style = TextStyle(fontSize = 16.sp, color = Color.White)
                 )
             }
@@ -248,15 +263,15 @@ private fun MainCard() {
                 modifier = Modifier
                     .size(64.dp)
                     .padding(top = 3.dp, end = 8.dp),
-                model = "https://cdn.weatherapi.com/weather/64x64/day/176.png",
+                model = icon,
                 contentDescription = "im condition",
             )
             Text(
-                text = "0°C",
-                style = TextStyle(fontSize = 57.sp, color = Color.White)
+                text = currentTemp,
+                style = TextStyle(fontSize = 48.sp, color = Color.White)
             )
             Text(
-                text = "condition",
+                text = condition,
                 style = TextStyle(fontSize = 16.sp, color = Color.White),
                 modifier = Modifier.padding(bottom = 3.dp)
             )
@@ -281,7 +296,7 @@ private fun MainCard() {
                         contentDescription = "ic up"
                     )
                     Text(
-                        text = "0°/0°",
+                        text = maxMin,
                         style = TextStyle(fontSize = 16.sp, color = Color.White)
                     )
                     Image(
@@ -305,7 +320,10 @@ private fun MainCard() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TabLayout() {
+fun TabLayout(
+    listForecast: MutableState<List<Forecast>>,
+    weatherDetails: MutableState<WeatherDetails>
+) {
     val tabList = listOf("FORECAST", "DETAILS")
     val pagerState = rememberPagerState {
         tabList.size
@@ -351,27 +369,32 @@ fun TabLayout() {
             modifier = Modifier.weight(1.0f)
         ) { index ->
             when (index) {
-                0 -> MainList()
-                1 -> Details()
+                0 -> ForecastList(listForecast = listForecast.value)
+                1 -> Details(weatherDetails = weatherDetails)
             }
         }
     }
 }
 
 @Composable
-fun MainList() {
+fun ForecastList(listForecast: List<Forecast>) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     ) {
-        items(20) {
-            ListItem()
+        itemsIndexed(listForecast) { index, _ ->
+            ListItem(item = listForecast[index])
         }
     }
 }
 
 @Composable
-fun ListItem() {
+fun ListItem(item: Forecast) {
+
+    val date = item.date.ifEmpty { "-" }
+    val condition = item.condition.ifEmpty { "-" }
+    val temp = "${item.temp.toFloatOrNull()?.roundToInt() ?: 0}°C"
+    val icon = "https:" + item.icon
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -393,17 +416,17 @@ fun ListItem() {
                 modifier = Modifier.padding(start = 8.dp, top = 5.dp, bottom = 5.dp)
             ) {
                 Text(
-                    text = "date and time",
-                    style = TextStyle(fontSize = 16.sp)
+                    text = date,
+                    style = TextStyle(fontSize = 16.sp),
                 )
                 Text(
                     modifier = Modifier.padding(top = 2.dp),
-                    text = "condition",
+                    text = condition,
                     color = Color.White, style = TextStyle(fontSize = 16.sp)
                 )
             }
             Text(
-                text = "0°",
+                text = temp,
                 color = Color.White,
                 style = TextStyle(fontSize = 20.sp)
             )
@@ -411,7 +434,7 @@ fun ListItem() {
                 modifier = Modifier
                     .size(38.dp)
                     .padding(end = 8.dp),
-                model = "https://cdn.weatherapi.com/weather/64x64/day/176.png",
+                model = icon,
                 contentDescription = "im condition",
             )
 
@@ -421,14 +444,22 @@ fun ListItem() {
 }
 
 @Composable
-fun Details() {
+fun Details(weatherDetails: MutableState<WeatherDetails>) {
+    val sunriseTime = weatherDetails.value.sunrise.ifEmpty { "-" }
+    val sunsetTime = weatherDetails.value.sunset.ifEmpty { "-" }
+    val windSpeed = "${weatherDetails.value.windSpeed.toFloatOrNull()?.roundToInt() ?: 0}"
+    val chanceOfRain = weatherDetails.value.chanceOfRain.ifEmpty { "-" }
+    val chanceOfSnow = weatherDetails.value.chanceOfSnow.ifEmpty { "-" }
+    val humidity = weatherDetails.value.humidity.ifEmpty { "-" }
+    val cloud = weatherDetails.value.cloud.ifEmpty { "-" }
+
     ConstraintLayout(
         modifier = Modifier
             .padding(top = 4.dp)
             .fillMaxSize()
             .background(ThemeWeather)
     ) {
-        val (iconSunrise, textSunrise, iconSunset, textSunset, line, textLastUpdated, dataColumn) = createRefs()
+        val (iconSunrise, textSunrise, iconSunset, textSunset, line, dataColumn) = createRefs()
         val centerVerticalGuideLine = createGuidelineFromStart(0.5f)
 
         Icon(
@@ -472,7 +503,7 @@ fun Details() {
             text = buildAnnotatedString {
                 append("Sunrise:\n")
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append("0:00 AM")
+                    append(sunriseTime)
                 }
             },
             color = Color.White,
@@ -487,7 +518,7 @@ fun Details() {
             text = buildAnnotatedString {
                 append("Sunset:\n")
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append("0:00 PM")
+                    append(sunsetTime)
                 }
             },
             color = Color.White,
@@ -503,71 +534,60 @@ fun Details() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                modifier = Modifier.padding(bottom = 4.dp),
+                modifier = Modifier.padding(bottom = 6.dp),
                 text = buildAnnotatedString {
                     append("Wind speed: ")
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("0 km/h")
+                        append("$windSpeed km/h")
                     }
                 },
                 color = Color.White,
                 style = TextStyle(fontSize = 16.sp)
             )
             Text(
-                modifier = Modifier.padding(bottom = 4.dp),
+                modifier = Modifier.padding(bottom = 6.dp),
                 text = buildAnnotatedString {
                     append("Chance of rain: ")
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("0 %")
+                        append("$chanceOfRain %")
                     }
                 },
                 color = Color.White,
                 style = TextStyle(fontSize = 16.sp)
             )
             Text(
-                modifier = Modifier.padding(bottom = 4.dp),
+                modifier = Modifier.padding(bottom = 6.dp),
                 text = buildAnnotatedString {
                     append("Chance of snow: ")
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("0 %")
+                        append("$chanceOfSnow %")
                     }
                 },
                 color = Color.White,
                 style = TextStyle(fontSize = 16.sp)
             )
             Text(
-                modifier = Modifier.padding(bottom = 4.dp),
+                modifier = Modifier.padding(bottom = 6.dp),
                 text = buildAnnotatedString {
                     append("Humidity: ")
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("0 %")
+                        append("$humidity %")
                     }
                 },
                 color = Color.White,
                 style = TextStyle(fontSize = 16.sp)
             )
             Text(
-                modifier = Modifier.padding(bottom = 4.dp),
+                modifier = Modifier.padding(bottom = 6.dp),
                 text = buildAnnotatedString {
                     append("cloud: ")
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("0 %")
+                        append("$cloud %")
                     }
                 },
                 color = Color.White,
                 style = TextStyle(fontSize = 16.sp)
             )
         }
-        Text(
-            modifier = Modifier.constrainAs(textLastUpdated) {
-                top.linkTo(dataColumn.bottom)
-                bottom.linkTo(parent.bottom)
-                start.linkTo(centerVerticalGuideLine)
-                end.linkTo(centerVerticalGuideLine)
-            },
-            text = "last updated 0 minutes ago",
-            color = Color.White.copy(0.64f),
-            style = TextStyle(fontSize = 12.sp)
-        )
     }
 }
