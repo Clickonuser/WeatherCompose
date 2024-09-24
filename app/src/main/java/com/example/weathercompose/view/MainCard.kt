@@ -29,7 +29,7 @@ import com.example.weathercompose.ui.theme.ThemeWeather
 import kotlin.math.roundToInt
 
 @Composable
-fun MainCard(weatherMainCard: MutableState<WeatherMainCard>) {
+fun MainCard(weatherMainCard: MutableState<WeatherMainCard>, onClickSync: () -> Unit, onClickSearch: () -> Unit) {
 
     val city = weatherMainCard.value.city.ifEmpty { "-" }
     val date = weatherMainCard.value.date.ifEmpty { "-" }
@@ -93,7 +93,7 @@ fun MainCard(weatherMainCard: MutableState<WeatherMainCard>) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 IconButton(onClick = {
-
+                    onClickSearch.invoke()
                 }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_search),
@@ -118,7 +118,7 @@ fun MainCard(weatherMainCard: MutableState<WeatherMainCard>) {
                     )
                 }
                 IconButton(onClick = {
-
+                    onClickSync.invoke()
                 }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_sync),

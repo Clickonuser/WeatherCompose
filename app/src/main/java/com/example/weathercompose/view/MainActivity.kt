@@ -27,6 +27,9 @@ class MainActivity : ComponentActivity() {
                 val city = remember {
                     mutableStateOf("Tokyo")
                 }
+                val showDialog = remember {
+                    mutableStateOf(false)
+                }
                 val forecast = remember {
                     mutableStateOf(listOf<Forecast>())
                 }
@@ -60,18 +63,33 @@ class MainActivity : ComponentActivity() {
                 Background()
 
                 Column {
-                    MainCard(weatherMainCard)
+                    MainCard(
+                        weatherMainCard = weatherMainCard,
+                        onClickSearch = {
+                            showDialog.value = true
+                         },
+                        onClickSync = {
+                            weatherViewModel.fetchWeatherData(city.value)
+                        }
+                    )
                     TabLayout(forecast, weatherDetails)
-                }
-
-                LaunchedEffect(city.value) {
-                    weatherViewModel.fetchWeatherData(city.value)
                 }
 
                 weatherViewModel.weatherInfoResult.observe(this) { weatherInfo ->
                     forecast.value = weatherInfo.forecast
                     weatherMainCard.value = weatherInfo.weatherMainCard
                     weatherDetails.value = weatherInfo.weatherDetails
+                }
+
+                LaunchedEffect(city.value) {
+                    weatherViewModel.fetchWeatherData(city.value)
+                }
+
+                // Show search dialog
+                if (showDialog.value) {
+                    DialogBox (dialogState = showDialog, onClickOk = { it ->
+                        city.value = it
+                    }, city = city)
                 }
             }
         }
